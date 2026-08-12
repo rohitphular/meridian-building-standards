@@ -59,7 +59,23 @@ Log files: `$MERIDIAN_LOG_ROOT/{top_module}/{top_module}.log` — daily rotation
 
 ### `py-db-migrate`
 
-Schema migration runner. Used for all PostgreSQL DDL — never run `CREATE TABLE` ad-hoc.
+Schema migration runner. Supports PostgreSQL and ClickHouse. Used for all DDL — never run `CREATE TABLE` ad-hoc.
+
+Database drivers are optional extras — declare the one you need:
+
+```toml
+[project]
+dependencies = [
+    "py-db-migrate[postgres]",    # for PostgreSQL
+    # or
+    "py-db-migrate[clickhouse]",  # for ClickHouse
+]
+
+[tool.uv.sources]
+py-db-migrate = { git = "git+ssh://git@github.com/rohitphular/meridian-common-libs.git", subdirectory = "py-db-migrate" }
+```
+
+Never declare bare `py-db-migrate` without an extra — the adapter will raise `ImportError` at runtime with a message naming the missing extra.
 
 ```python
 from py_db_migrate.core.config import ConnectionConfig
@@ -190,6 +206,44 @@ my-lib = { git = "git+ssh://git@github.com/rohitphular/meridian-common-libs.git"
 ```python
 from my_lib import PublicClass   # resolved via __init__.py re-export
 ```
+
+---
+
+## Linting and formatting — always use ruff
+
+Every Python module — job module and library package alike — uses `ruff` for both linting and formatting. There is no separate linter or formatter (no `flake8`, `black`, `isort`, or `pylint`); `ruff` covers all of them.
+
+`ruff` is declared under `[dependency-groups] dev` (shown in the pyproject examples above) and configured with this exact block in every `pyproject.toml`:
+
+```toml
+[tool.ruff]
+line-length = 200
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+
+[tool.ruff.format]
+quote-style = "double"
+```
+
+- `line-length = 200` — the project line-length limit.
+- `target-version = "py312"` — matches `requires-python = ">=3.12"`.
+- `select = ["E", "F", "I"]` — pycodestyle errors (`E`), pyflakes (`F`), and import sorting (`I`). Import order is enforced by the linter — never hand-sort imports.
+- `quote-style = "double"` — double quotes everywhere.
+
+Run both commands from the module root before every commit. Both must pass with zero findings — a module with lint or format violations is not shippable:
+
+```bash
+uv run ruff check .          # lint — no violations allowed
+uv run ruff format --check .  # formatting — must already be formatted
+```
+
+`ruff check .` reports lint violations; `ruff format --check .` fails if any file is not already formatted. To fix rather than check, run `uv run ruff check --fix .` and `uv run ruff format .`.
+
+`ruff format` also normalises Python code blocks embedded in Markdown (`.md`) files, so documentation examples are held to the same formatting as source.
+
+These two commands are the mandatory lint/format gate in CI — see `APP-CICD-BE-PYTHON.md`.
 
 ---
 

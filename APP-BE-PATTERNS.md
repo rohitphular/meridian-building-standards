@@ -418,6 +418,30 @@ Key rules:
 
 ---
 
+## Linting and formatting
+
+Every backend module has a linter and an auto-formatter, regardless of language. Both run as a mandatory gate in **check mode** before every commit and in CI — a module with any lint or formatting finding is not shippable. The rules are identical in every language; only the tool changes.
+
+Key rules (language-agnostic):
+- **One tool set per language, config committed to the repo.** The linter/formatter configuration lives in the project manifest so every developer and CI run applies identical rules. Never rely on editor defaults or per-developer settings.
+- **Two gate commands.** A lint check that reports violations, and a format check that fails if any file is not already formatted. Both must pass with zero findings. Each has a fix-mode variant for local use, but CI always runs check mode.
+- **The formatter is the single source of truth for style.** No manual formatting, no per-file style. Suppress a rule only with an inline, justified annotation — never by loosening the shared config.
+- **Import / declaration ordering is enforced by the tool**, never hand-maintained.
+- **Docs are held to the same bar.** Where the formatter supports it, code blocks embedded in Markdown and other docs are formatted to the same standard as source.
+- **CI runs both commands ahead of build, test, and deploy** — see the language's CI guide.
+
+Per-language tools:
+
+| Language | Linter + formatter | Standard |
+|---|---|---|
+| Python | `ruff` (lint + format) | `APP-BE-PYTHON.md § Linting and formatting`; CI gate in `APP-CICD-BE-PYTHON.md` |
+| Google Apps Script / JS | to be defined when a tool is adopted | — |
+| _future languages_ | one tool set, committed config, check-mode gate | this section |
+
+When a new language is introduced: add its row here, then add a language-specific section in that language's guide following the same three requirements — committed config, two gate commands (check + format-check), and CI enforcement.
+
+---
+
 ## Coding guidelines
 
 > Naming conventions are in **APP-CONVENTIONS.md**.

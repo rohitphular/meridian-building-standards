@@ -23,6 +23,20 @@ Run this once after cloning and whenever `pyproject.toml` changes.
 
 ---
 
+## Quality gate — lint and format
+
+Before a job is deployed or scheduled, both `ruff` commands must pass with zero findings. This is the same gate defined in `APP-BE-PYTHON.md § Linting and formatting — always use ruff`:
+
+```bash
+cd <job-directory>
+uv run ruff check .           # lint — no violations allowed
+uv run ruff format --check .  # formatting — must already be formatted
+```
+
+A module that fails either command is not deployable. Run them locally before pushing, and wire them as a required CI step that runs ahead of the migration and run steps.
+
+---
+
 ## Applying migrations
 
 Run once per environment before the first job run, and again whenever new migration files are added.
@@ -72,6 +86,7 @@ Store these in a `.env` file (git-ignored) for local runs, and in the environmen
 
 | Target | What it does |
 |---|---|
+| `make lint` | Run `ruff check .` and `ruff format --check .` — must pass before deploy |
 | `make migrate` | Apply pending migrations for the current env |
 | `make run` | Run the job (daily mode) |
 | `make backfill DATE=YYYY-MM-DD` | Run in backfill mode from the given date |
