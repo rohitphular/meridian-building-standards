@@ -22,6 +22,13 @@ Module: xxxxxxxx
 Template: building-standards/TEMPLATE-README.md
 ```
 
+### Create HOW-TO-USE-THIS-LIB document
+
+```text
+Create a HOW-TO-USE-THIS-LIB.md for the module. Read every source file in the module before writing — every code snippet, parameter name, environment variable, method name, and configuration key must be traced to the actual source and confirmed correct. Write from the consumer's perspective only: how to declare the dependency, how to configure it, and how to use the public API. Do not document internal implementation details. Structure: one section per distinct use case, each with a minimal working example. Use the public API exports from __init__.py as the surface — do not show internal import paths.
+Module: xxxxxxxx
+```
+
 ---
 
 ## Code review
