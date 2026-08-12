@@ -154,6 +154,7 @@ Use the `src` layout. Placing the package under `src/` keeps the uninstalled sou
   tests/
     unit/
     integration/
+  Makefile             ← `make test` (+ `make test-unit` / `make test-integration` when split)
   pyproject.toml
 ```
 
@@ -229,7 +230,7 @@ quote-style = "double"
 
 - `line-length = 200` — the project line-length limit.
 - `target-version = "py312"` — matches `requires-python = ">=3.12"`.
-- `select = ["E", "F", "I"]` — pycodestyle errors (`E`), pyflakes (`F`), and import sorting (`I`). Import order is enforced by the linter — never hand-sort imports.
+- `select = ["E", "F", "I"]` — pycodestyle errors (`E`), pyflakes (`F`), and import sorting (`I`). Import order is enforced by the linter — never hand-sort or hand-group imports. Shared internal libraries are treated as third-party by default; do not insert a blank line to separate them into their own group. To give internal packages a dedicated import group, set them in `[tool.ruff.lint.isort] known-first-party` — never simulate it with manual spacing.
 - `quote-style = "double"` — double quotes everywhere.
 
 Run both commands from the module root before every commit. Both must pass with zero findings — a module with lint or format violations is not shippable:
@@ -244,6 +245,21 @@ uv run ruff format --check .  # formatting — must already be formatted
 `ruff format` also normalises Python code blocks embedded in Markdown (`.md`) files, so documentation examples are held to the same formatting as source.
 
 These two commands are the mandatory lint/format gate in CI — see `APP-CICD-BE-PYTHON.md`.
+
+---
+
+## Testing
+
+The language-agnostic testing rules are in `APP-BE-PATTERNS.md § Testing`. Python specifics:
+
+- **Layout** — unit tests in `tests/unit/`, integration tests in `tests/integration/`. No test file sits directly in `tests/`, and there are no `__init__.py` files under `tests/` (pytest discovers by path).
+- **Runner** — `pytest`, declared under `[dependency-groups] dev`. Run `uv run pytest tests/unit/` for the fast suite and `uv run pytest tests/integration/` for the integration suite.
+- **Makefile** — every library ships a `Makefile` with a `make test` target that runs its suite via `uv run pytest`. When the library has a unit/integration split, also provide `make test-unit` (fast, no external services) and `make test-integration`; `make test` runs the full suite. The full `make test` may require Docker (containerised integration tests) or credentials — `make test-unit` is the dependency-free path, and always passes without external services. The repository root ships a generic `Makefile` whose `make test` runs `make test` in every subdirectory that has one, so new libraries are covered automatically.
+- **Unit tests** — no network, no database, no containers. Use the `tmp_path` and `monkeypatch` fixtures for file-system and environment needs; never touch a real external service.
+- **Integration tests** — exercise the real dependency in a disposable container (e.g. `testcontainers`); never mock the client under test. Start the container once per module with a `scope="module"` fixture, not once per test.
+- **Skips** — an integration test whose dependency is unavailable (an optional-dependency extra not installed, or no container runtime) calls `pytest.skip(...)` with a clear reason instead of failing.
+- **Shared fixtures** — put shared setup in `conftest.py`; do not import it from other test files.
+- **Naming** — test function names describe the behaviour verified (`test_read_missing_sheet_returns_empty`), not the mechanism.
 
 ---
 

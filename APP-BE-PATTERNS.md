@@ -442,6 +442,20 @@ When a new language is introduced: add its row here, then add a language-specifi
 
 ---
 
+## Testing
+
+Every backend module with logic worth protecting has tests, regardless of language. The tooling differs per language (see the language guide); the organisation and rules below are the same everywhere.
+
+- **Separate unit from integration.** Unit tests and integration tests live in distinct, dedicated locations — never scattered through the source tree. The language guide defines the exact directories.
+- **Unit tests are hermetic.** No network, no database, no containers, no dependence on the clock or the real file system beyond injected test fixtures. They are fast and deterministic, and run on every change.
+- **Integration tests use the real dependency.** A test covering behaviour against a database, HTTP service, queue, or file system exercises a real or containerised instance of it. Mocking the dependency under test is prohibited — a mock proves nothing about the integration.
+- **Skip cleanly when a dependency is unavailable.** An integration test whose backing service or driver is absent skips with a clear reason rather than failing, so the unit suite stays green in environments without the dependency.
+- **Each test owns its state.** Every test sets up what it needs and cleans up after itself; no test depends on another test's leftovers or on execution order.
+- **Share setup through fixtures, not test-to-test imports.** Common setup lives in the language's designated fixture/helper location; test files never import business logic or state from other test files. Start expensive resources (a container, a connection) once per suite or module, not once per test.
+- **Name tests by behaviour.** A test name states the behaviour verified, not the mechanism — `test_rejects_duplicate_entry`, not `test_insert_2`.
+
+---
+
 ## Coding guidelines
 
 > Naming conventions are in **APP-CONVENTIONS.md**.

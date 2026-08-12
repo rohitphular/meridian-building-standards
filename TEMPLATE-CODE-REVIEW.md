@@ -146,7 +146,18 @@ Check each item against the standard. Mark PASS or FAIL with file and line refer
 
 ---
 
-## Step 5 — Code quality
+## Step 5 — Code quality, linting, and formatting
+
+### Linting and formatting gate
+
+The module's configured linter and formatter must both pass in check mode with zero findings. This is a hard gate — any lint or formatting finding fails the review regardless of other results. The exact tools and commands are defined in the language's standards doc listed in Step 1.
+
+- [ ] The linter passes in check mode with zero findings — run the command the language's standards doc defines. Flag every reported violation.
+- [ ] The formatter reports no changes in check mode — every file is already formatted. Flag any file the formatter would rewrite.
+- [ ] The linter and formatter configuration is committed to the repo (in the project manifest or a config file) — not left to editor or per-developer defaults.
+- [ ] Import/declaration ordering is enforced by the tool, not hand-maintained — flag manually grouped or reordered imports the tool would change.
+
+### Code quality
 
 Check each item. Mark PASS or FAIL with file and line reference.
 
@@ -336,6 +347,7 @@ SELF-CHECK — complete before delivering. Then delete this entire block.
 [ ] Step 4: has at least 4 categories — one per distinct concern area in the standards doc.
 [ ] Step 4: every check traces back to a specific rule in the standards doc — no generic advice.
 [ ] Step 4: every check is a reviewer directive, not a restatement of the standard.
+[ ] Step 5: linting/formatting gate kept, referencing the language's actual lint and format commands.
 [ ] Step 6 header: updated with actual conventions doc filename.
 [ ] Step 6: has at least 4 artifact-type subsections from the standards doc — none collapsed together.
 [ ] Step 6: naming rules extracted from the standards doc — none invented.
