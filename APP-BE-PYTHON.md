@@ -81,7 +81,18 @@ def upgrade(client) -> None:
 
 ---
 
-## Python job — folder structure
+## Module types
+
+Two distinct Python module types exist in this codebase. Apply the correct pattern for each — the folder structure, `__init__.py` rules, and `pyproject.toml` shape differ between them.
+
+| Type | Purpose | Consumed by |
+|---|---|---|
+| **Job module** | Runs as a process — scheduled, triggered, or invoked manually | Scheduler, cron, `make` targets |
+| **Library package** | Installed as a dependency; provides a reusable importable API | Other modules via `pyproject.toml` uv git source |
+
+---
+
+## Job module — folder structure
 
 ```
 <module>/
@@ -101,7 +112,82 @@ def upgrade(client) -> None:
     0002_<name>.py
 ```
 
-No `__init__.py` files anywhere. Python 3.3+ namespace packages handle directory imports without them. Never add `__init__.py` as a way to make a directory importable — import explicitly by module path instead.
+No `__init__.py` files anywhere in a job module. Python 3.3+ namespace packages handle directory imports without them. Never add `__init__.py` as a way to make a directory importable — import explicitly by module path instead.
+
+Job modules set `package = false` in `pyproject.toml` — they are not installed as packages:
+
+```toml
+[tool.uv]
+package = false
+```
+
+---
+
+## Library package — folder structure
+
+Use the `src` layout. Placing the package under `src/` keeps the uninstalled source tree off the Python path during development and test runs — without it, `import <package>` resolves to the local directory rather than the installed package, silently masking packaging errors.
+
+```
+<lib-name>/
+  src/
+    <package_name>/
+      __init__.py        ← public API — re-exports only what consumers should import
+      <module_a>.py      ← implementation file; name describes what it does, not what it is
+      <module_b>.py
+      py.typed           ← PEP 561 marker (required for typed packages)
+  tests/
+    unit/
+    integration/
+  pyproject.toml
+```
+
+**`__init__.py` in library packages:** Library packages use `__init__.py` to define a stable public API contract. It must only re-export the symbols consumers are expected to import — no internal implementation details. This is the only context where `__init__.py` is used in this codebase.
+
+**File naming inside a library package:** Every implementation file must be named after what it does, not after a generic role. `sheets_client.py` is correct; `client.py` is not — it says nothing about which client.
+
+**`pyproject.toml` for a library package:**
+
+```toml
+[project]
+name = "my-lib"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "some-dep>=1.0",
+    "py-logging",
+]
+
+[tool.uv.sources]
+py-logging = { git = "git+ssh://git@github.com/rohitphular/meridian-common-libs.git", subdirectory = "py-logging" }
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.9",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/<package_name>"]
+```
+
+Library packages do **not** set `[tool.uv] package = false` — that flag is for job modules only.
+
+**Consuming a library package** in another module's `pyproject.toml`:
+
+```toml
+[tool.uv.sources]
+my-lib = { git = "git+ssh://git@github.com/rohitphular/meridian-common-libs.git", subdirectory = "my-lib" }
+```
+
+**Importing from a library package:**
+
+```python
+from my_lib import PublicClass   # resolved via __init__.py re-export
+```
 
 ---
 
