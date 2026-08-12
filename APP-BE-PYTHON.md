@@ -176,6 +176,8 @@ packages = ["src/<package_name>"]
 
 Library packages do **not** set `[tool.uv] package = false` — that flag is for job modules only.
 
+Library packages do **not** commit a `uv.lock`. A lockfile pins exact dependency versions for a reproducible install, which is a job-module concern — a library's consumers resolve and lock their own dependency versions. Add `uv.lock` to `.gitignore` in the library repo. Job modules, by contrast, do commit their `uv.lock`.
+
 **Consuming a library package** in another module's `pyproject.toml`:
 
 ```toml

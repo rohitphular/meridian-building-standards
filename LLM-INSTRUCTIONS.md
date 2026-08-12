@@ -60,3 +60,22 @@ Template: building-standards/TEMPLATE-README.md
 Fix all FAIL and WARNING findings from the README review.
 Module: xxxxxxxx
 ```
+
+---
+
+## HOW-TO review
+
+### Verify HOW-TO documents against implementation
+
+```text
+Read every HOW-TO-*.md document in the module and verify it is 100% accurate against the code. For every instruction, step, command, code snippet, parameter name, environment variable, and configuration example: trace it to the actual source and confirm it is correct as written. Flag anything that is wrong, outdated, missing, or misleading. Report findings in PASS / FAIL / WARNINGS format.
+Module: xxxxxxxx
+HOW-TO documents: xxxxxxxx
+```
+
+### Fix all HOW-TO findings
+
+```text
+Fix all FAIL and WARNING findings from the HOW-TO review.
+Module: xxxxxxxx
+```
