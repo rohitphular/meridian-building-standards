@@ -41,9 +41,9 @@ STYLE:
   Purpose: one sentence — what this review document is for and who should use it.
   Scope: one sentence — which files and directories are in scope.
   Example:
-    Purpose: "Standing instruction set for reviewing the `currency-rates` data-sync job.
+    Purpose: "Standing instruction set for reviewing the `forex-database-load` data-sync job.
               Use this document each time you perform a code review."
-    Scope: "Everything under `data-synchronization/currency-rates/` including migrations,
+    Scope: "Everything under `data-synchronization/forex-database-load/` including migrations,
              sources, database helpers, core logic, config, and README."
 -->
 

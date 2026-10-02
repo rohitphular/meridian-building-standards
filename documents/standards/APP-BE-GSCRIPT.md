@@ -65,15 +65,17 @@ Script Properties are the equivalent of environment variables in GAS. They are s
 
 | Property | Required | Purpose |
 |---|---|---|
-| `PIN_SECRET` | Yes | The PIN users enter at login. `checkPin` reads this via `PropertiesService`. |
-| `TOTP_SECRET` | When TOTP enabled | Base32-encoded RFC 6238 secret — same value entered into an authenticator app. |
+| `MERIDIAN_FULCRUM_PIN` | Yes | The PIN users enter at login. `checkPin` reads this via `PropertiesService`. |
+| `MERIDIAN_FULCRUM_SECRET` | When TOTP enabled | Base32-encoded RFC 6238 secret — same value entered into an authenticator app. |
 | `TOTP_ENABLED` | No (default `false`) | `"true"` to enforce TOTP; any other value skips it. |
 | `OPENAI_API_KEY` | Only for advisor | API key for `UrlFetchApp` calls to the OpenAI endpoint in `advisor-core.gs`. |
+
+The same two names are used everywhere: as GAS Script Properties and, for the Python jobs that sign in, in `infrastructure/.env.<env>`. Never introduce another name for either value.
 
 Read a property at runtime with:
 
 ```js
-PropertiesService.getScriptProperties().getProperty('PIN_SECRET');
+PropertiesService.getScriptProperties().getProperty('MERIDIAN_FULCRUM_PIN');
 ```
 
 ---
@@ -189,7 +191,7 @@ Pulls `{ ip, city, country, ua }` from a query-string parameter object or a POST
 
 ### `checkPin(pin)`
 
-Constant-time comparison of `pin` against `PIN_SECRET` from Script Properties. Returns `true` if correct, `false` otherwise. Timing-safe: always iterates the full length of the longer string to prevent timing-based PIN inference.
+Constant-time comparison of `pin` against `MERIDIAN_FULCRUM_PIN` from Script Properties. Returns `true` if correct, `false` otherwise. Timing-safe: always iterates the full length of the longer string to prevent timing-based PIN inference.
 
 ### `json(obj)`
 

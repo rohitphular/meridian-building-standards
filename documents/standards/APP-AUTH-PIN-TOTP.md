@@ -18,9 +18,11 @@ Store all secrets in a server-side secret store (environment variables, a secret
 
 | Secret | Required | Notes |
 |---|---|---|
-| `CREDENTIAL_SECRET` | Yes | The PIN or password — minimum 8 characters; alphanumeric recommended |
-| `TOTP_SECRET` | When TOTP enabled | Base32-encoded RFC 6238 secret — same value entered into an authenticator app |
+| `MERIDIAN_FULCRUM_PIN` | Yes | The PIN or password — minimum 8 characters; alphanumeric recommended |
+| `MERIDIAN_FULCRUM_SECRET` | When TOTP enabled | Base32-encoded RFC 6238 secret — same value entered into an authenticator app |
 | `TOTP_ENABLED` | No (defaults to `false`) | `"true"` to enforce TOTP at login; any other value skips it |
+
+The same two names are used everywhere: as GAS Script Properties and, for the Python jobs that sign in, in `infrastructure/.env.<env>`. Never introduce another name for either value.
 
 ---
 
@@ -56,8 +58,8 @@ login only:  check_rate_limit → verify_credential → verify_totp → record_a
 
 | Input | Source |
 |---|---|
-| Credential (PIN/password) | User enters at login. Matched against `CREDENTIAL_SECRET`. |
-| TOTP code | User enters at login. Validated against `TOTP_SECRET` when `TOTP_ENABLED = true`. |
+| Credential (PIN/password) | User enters at login. Matched against `MERIDIAN_FULCRUM_PIN`. |
+| TOTP code | User enters at login. Validated against `MERIDIAN_FULCRUM_SECRET` when `TOTP_ENABLED = true`. |
 | Client IP | Extracted from request headers or body. Used for rate limiting and audit. |
 | User agent | Browser or client identifier. Audit only — not verified for authenticity. |
 
@@ -65,10 +67,10 @@ login only:  check_rate_limit → verify_credential → verify_totp → record_a
 
 ## Credential check
 
-- Read `CREDENTIAL_SECRET` from the secret store.
+- Read `MERIDIAN_FULCRUM_PIN` from the secret store.
 - Run a **constant-time comparison**. This matters: a naive string equality short-circuits on the first mismatched character, leaking information about how close a guess was through response timing. Constant-time comparison always iterates the full length of the longer string regardless of where the mismatch occurs.
 - Return `true` (valid) or `false` (invalid).
-- If `CREDENTIAL_SECRET` is not configured, return `false` — fail closed, not fail open.
+- If `MERIDIAN_FULCRUM_PIN` is not configured, return `false` — fail closed, not fail open.
 
 ---
 
@@ -76,7 +78,7 @@ login only:  check_rate_limit → verify_credential → verify_totp → record_a
 
 | `TOTP_ENABLED` | Behaviour |
 |---|---|
-| `true` | Validates the 6-digit code via RFC 6238 HMAC-SHA1 with a ±1 window for clock skew. Wrong code → `totp_invalid`. If `TOTP_SECRET` is not set → return `totp_invalid` immediately (fail closed). |
+| `true` | Validates the 6-digit code via RFC 6238 HMAC-SHA1 with a ±1 window for clock skew. Wrong code → `totp_invalid`. If `MERIDIAN_FULCRUM_SECRET` is not set → return `totp_invalid` immediately (fail closed). |
 | `false` or absent | Skip validation. Any 6-digit input is accepted (dev convenience). |
 
 The login form always shows both fields regardless of the flag. The user always enters a code. The server silently enforces or skips the check based on the flag — no client-side change needed to toggle TOTP.
@@ -159,7 +161,7 @@ Choose based on threat model. Hardened is preferred when the session store is av
    ```bash
    python3 -c "import base64, os; print(base64.b32encode(os.urandom(20)).decode())"
    ```
-3. Store the Base32 value in the secret store as `TOTP_SECRET`.
+3. Store the Base32 value in the secret store as `MERIDIAN_FULCRUM_SECRET`.
 4. Add the same Base32 value to Google Authenticator, Authy, or any RFC 6238-compatible authenticator app.
 
 ---
@@ -172,4 +174,4 @@ Choose based on threat model. Hardened is preferred when the session store is av
 4. Wire request handling in this exact order: `check_rate_limit` → `verify_credential` → `record_attempt` → `dispatch`. Never swap the first two steps.
 5. For the login endpoint, add `verify_totp` between `verify_credential` and `record_attempt`.
 6. On the client: store only the session token (or credential) in per-tab storage with an expiry timestamp. Check expiry before every request.
-7. Configure `CREDENTIAL_SECRET`, `TOTP_SECRET`, and `TOTP_ENABLED` separately per environment — never share secrets between dev and prod.
+7. Configure `MERIDIAN_FULCRUM_PIN`, `MERIDIAN_FULCRUM_SECRET`, and `TOTP_ENABLED` separately per environment — never share secrets between dev and prod.
