@@ -109,3 +109,9 @@ Template: building-standards/templates/TEMPLATE-HOW-TO-SETUP-KEY.md
 Fix all FAIL and WARNING findings from the HOW-TO review.
 Module: xxxxxxxx
 ```
+
+---
+
+## Epic and story delivery
+
+Use [the shared delivery process](documents/process/README.md) and [workflow prompts](documents/process/delivery-workflow-messages.md) for epic creation, review, story implementation and retrospectives. Set the project path in each prompt before use.
